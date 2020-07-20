@@ -533,6 +533,8 @@ MongoClient.connect(connectionString, { useUnifiedTopology: true }).then(
 );
 
 // start the server
-app.listen(8081, () => {
-  console.log("listening on port 8081");
-});
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 8081;
+}
+app.listen(port);
