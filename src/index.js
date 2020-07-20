@@ -936,7 +936,6 @@ MongoClient.connect(connectionString, { useUnifiedTopology: true }).then(
     });
   }
 );
-
 // start the server
 let port = process.env.PORT;
 if (port == null || port == "") {
