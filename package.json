@@ -17,7 +17,8 @@
     "express-jwt": "^5.3.3",
     "helmet": "^3.22.0",
     "jwks-rsa": "^1.8.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "node-fetch": "^2.6.0"
   },
   "engines": {
     "node": "12.16.x"
