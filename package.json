@@ -19,7 +19,8 @@
     "jwks-rsa": "^1.8.0",
     "mongodb": "^3.5.9",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "throng": "^4.0.0"
   },
   "engines": {
     "node": "12.16.x"
