@@ -465,7 +465,7 @@ function start() {
 
       /*----------------Planner----------------*/
 
-      // Fetches list of all the modules from  NUSMods API
+      // Gets information about a specific module
       app.get("/Planner/module/:acadYear/:moduleCode", (req, res) => {
         fetch(
           `https://api.nusmods.com/v2/${req.params.acadYear}/modules/${req.params.moduleCode}.json`
@@ -474,46 +474,100 @@ function start() {
           .then((data) => res.send(data.moduleCredit));
       });
 
-      // Gets all the modules available in AY19/20
-      app.get("/Planner/modules", (req, res) => {
+      //helper function to send module data
+      function sendModuleData(moduleList) {
+        const allModules = {
+          sem1: Object.values(moduleList[1]).map((module) => {
+            return {
+              moduleCode: module.moduleCode,
+              moduleTitle: module.title,
+              moduleCredits: module.moduleCredit,
+            };
+          }),
+
+          sem2: Object.values(moduleList[2]).map((module) => {
+            return {
+              moduleCode: module.moduleCode,
+              moduleTitle: module.title,
+              moduleCredits: module.moduleCredit,
+            };
+          }),
+
+          st1: Object.values(moduleList[3]).map((module) => {
+            return {
+              moduleCode: module.moduleCode,
+              moduleTitle: module.title,
+              moduleCredits: module.moduleCredit,
+            };
+          }),
+
+          st2: Object.values(moduleList[4]).map((module) => {
+            return {
+              moduleCode: module.moduleCode,
+              moduleTitle: module.title,
+              moduleCredits: module.moduleCredit,
+            };
+          }),
+        };
+        return allModules;
+      }
+
+      // Gets all the modules available in the given AY
+      //acad year is in the format 19/20 for AY 2019-2020, so on.
+      app.get("/Planner/modules/:acadYear", (req, res) => {
         db.collection("data")
           .findOne({ modules: { $exists: true } })
           .then((results) => {
-            const allModules = {
-              sem1: Object.values(results.modules["19/20"][1]).map((module) => {
-                return {
-                  moduleCode: module.moduleCode,
-                  moduleTitle: module.title,
-                  moduleCredits: module.moduleCredit,
-                };
-              }),
+            let moduleList = results.modules[req.params.acadYear];
+            if (moduleList) {
+              res.send(sendModuleData(moduleList));
+            } else {
+              const year = "20" + req.params.acadYear.slice(0, 2) + "-20" + req.params.acadYear.slice(3, 5)
+              fetch(
+                `https://api.nusmods.com/v2/${year}/moduleInfo.json`
+              )
+                .then((response) => response.json())
+                .then((data) => {
+                  const newModuleList = {
+                    1: {},
+                    2: {},
+                    3: {},
+                    4: {},
+                  };
 
-              sem2: Object.values(results.modules["19/20"][2]).map((module) => {
-                return {
-                  moduleCode: module.moduleCode,
-                  moduleTitle: module.title,
-                  moduleCredits: module.moduleCredit,
-                };
-              }),
-
-              st1: Object.values(results.modules["19/20"][3]).map((module) => {
-                return {
-                  moduleCode: module.moduleCode,
-                  moduleTitle: module.title,
-                  moduleCredits: module.moduleCredit,
-                };
-              }),
-
-              st2: Object.values(results.modules["19/20"][4]).map((module) => {
-                return {
-                  moduleCode: module.moduleCode,
-                  moduleTitle: module.title,
-                  moduleCredits: module.moduleCredit,
-                };
-              }),
-            };
-
-            res.send(allModules);
+                  data.map((module) => {
+                    const semesterData = module.semesterData;
+                    const newModule = {
+                      moduleCode: module.moduleCode,
+                      title: module.title,
+                      moduleCredit: module.moduleCredit,
+                    }
+                    for (sem of semesterData) {
+                      if (sem.semester == 1) {
+                        newModuleList[1][module.moduleCode] = newModule;
+                      }
+                      if (sem.semester == 2) {
+                        newModuleList[2][module.moduleCode] = newModule;
+                      }
+                      if (sem.semester == 3) {
+                        newModuleList[3][module.moduleCode] = newModule;
+                      }
+                      if (sem.semester == 4) {
+                        newModuleList[4][module.moduleCode] = newModule;
+                      }
+                    }
+                  })
+                  return newModuleList;
+                })
+                .then((newModuleList) => {
+                  results.modules[req.params.acadYear] = newModuleList;
+                  db.collection("data").updateOne(
+                    { modules: { $exists: true } },
+                    { $set: { modules: results.modules } }
+                  );
+                  res.send(sendModuleData(newModuleList));
+                })
+            }
           })
           .catch((err) => console.error(err));
       });
