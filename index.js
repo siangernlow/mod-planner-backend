@@ -625,6 +625,7 @@ function start() {
               };
               users.users[req.body.name] = user;
               db.collection("data").insertOne(users);
+              res.send();
             } else if (!results["users"].hasOwnProperty(req.body.name)) {
               //the user does not exist in users
               const user = {
@@ -638,8 +639,7 @@ function start() {
               );
             }
           })
-          .then(res.send())
-          .catch((err) => console.error(err));
+          res.send();
       });
 
       //Adds a AY to the moduleList
